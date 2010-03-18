@@ -27,7 +27,7 @@ BROWSERS = (
     'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)'
 )
 
-DOMAIN_RULES = dict({'wikipedia.org':'en.wikipedia.org/wiki/', '.':'www.myspace.com'})
+DOMAIN_RULES = dict({'.':'twitter.com','/status/':'@@@@'})
 
 class PoolHTTPConnection(httplib.HTTPConnection):
     def connect(self):
@@ -159,6 +159,8 @@ class crawler:
             newpages = set()
             for page in pages:
                 crawled+=1
+                if (crawled % 100 == 0):
+                    print "\n\n!!! Crawled %d Pages !!! \n\n" % crawled
                 if crawled > max_crawl:
                     return
                 if (not reindex and self.isindexed(page)):
@@ -167,12 +169,12 @@ class crawler:
                 request = urllib2.Request(page, None, self.headers)
                 try:
                     response = opener.open(request)
+                    soup = BeautifulSoup(response.read())
+                    self.addtoindex(page, soup)
                 except:
                     print "Could not open %s" %page
                     continue
-                soup = BeautifulSoup(response.read())
-                self.addtoindex(page, soup)
-
+ 
                 links=soup('a')
                 for link in links:
                     if ('href' in dict(link.attrs)):
@@ -180,7 +182,7 @@ class crawler:
                         if url.find("'")!=-1: continue
                         url=url.split('#')[0] # remove location portion
                         goodpage = True
-                        if url[0:4]=='http' and not self.isindexed(url):
+                        if url[0:4]=='http':
                             for rule in DOMAIN_RULES:
                                 if (url.rfind(rule) != -1):
                                     if (url.rfind(DOMAIN_RULES[rule]) == -1):
@@ -340,10 +342,10 @@ class searcher:
             
 
 #pagelist = ['http://en.wikipedia.org/wiki/Ruffed_lemur']
-c = crawler('myspace.db')
+c = crawler('twitter.db')
 #c.createindextables()
 #c.crawl(pagelist)
-e = searcher('myspace.db')
+e = searcher('twitter.db')
 
         
 
